@@ -1,0 +1,9 @@
+# Ignore automated backups
+.backup/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore personal workout data (Fact table)
+fct_workout.csv
