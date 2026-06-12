@@ -1,0 +1,525 @@
+/* base themes */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* light theme */
+  --bg-color: #f5f5f7;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #b0b0b5;
+
+  --panel-bg: rgba(255, 255, 255, 0.4);
+  --panel-border: rgba(255, 255, 255, 0.45);
+  --panel-shadow: rgba(0, 0, 0, 0.06);
+
+  --card-bg: rgba(255, 255, 255, 0.5);
+  --card-border: rgba(255, 255, 255, 0.3);
+
+  /* red accent */
+  --accent-rgb: 255, 59, 48;
+  --rest-day-dot: transparent;
+  --rest-day-border: transparent;
+
+  --tooltip-bg: rgba(255, 255, 255, 0.75);
+  --tooltip-border: rgba(255, 255, 255, 0.6);
+  --tooltip-shadow: rgba(0, 0, 0, 0.12);
+
+  --orb-1: rgba(219, 234, 254, 0.6);
+  --orb-2: rgba(243, 232, 255, 0.6);
+  --orb-3: rgba(254, 244, 244, 0.6);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+  --scrollbar-track: rgba(0, 0, 0, 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* dark theme */
+    --bg-color: #0d0d0f;
+    --text-primary: #f5f5f7;
+    --text-secondary: #86868b;
+    --text-tertiary: #515154;
+
+    --panel-bg: rgba(28, 28, 30, 0.45);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --panel-shadow: rgba(0, 0, 0, 0.4);
+
+    --card-bg: rgba(44, 44, 46, 0.5);
+    --card-border: rgba(255, 255, 255, 0.04);
+
+    /* red accent */
+    --accent-rgb: 255, 69, 58;
+    --rest-day-dot: transparent;
+    --rest-day-border: transparent;
+
+    --tooltip-bg: rgba(30, 30, 32, 0.75);
+    --tooltip-border: rgba(255, 255, 255, 0.08);
+    --tooltip-shadow: rgba(0, 0, 0, 0.5);
+
+    --orb-1: rgba(30, 27, 75, 0.5);
+    --orb-2: rgba(58, 28, 92, 0.5);
+    --orb-3: rgba(67, 20, 30, 0.5);
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --scrollbar-track: rgba(255, 255, 255, 0.02);
+  }
+}
+
+/* reset and layout */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ambient background orbs */
+.mesh-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.8;
+  mix-blend-mode: normal;
+  transition: all 1s ease;
+}
+
+.glow-1 {
+  width: 55vw;
+  height: 55vw;
+  background: var(--orb-1);
+  top: -10%;
+  left: -10%;
+  animation: floatOrb1 25s infinite alternate ease-in-out;
+}
+
+.glow-2 {
+  width: 45vw;
+  height: 45vw;
+  background: var(--orb-2);
+  bottom: -10%;
+  right: -10%;
+  animation: floatOrb2 20s infinite alternate ease-in-out;
+}
+
+.glow-3 {
+  width: 35vw;
+  height: 35vw;
+  background: var(--orb-3);
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: floatOrb3 30s infinite alternate ease-in-out;
+}
+
+@keyframes floatOrb1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate(8%, 5%) scale(1.1);
+  }
+}
+
+@keyframes floatOrb2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate(-10%, -8%) scale(1.05);
+  }
+}
+
+@keyframes floatOrb3 {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-45%, -55%) rotate(360deg) scale(1.15);
+  }
+}
+
+/* app container */
+.app-container {
+  width: 100%;
+  max-width: 960px;
+  perspective: 1000px;
+}
+
+/* glassmorphism panel */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow: 0 15px 35px var(--panel-shadow);
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+}
+
+/* app header */
+.app-header {
+  margin-bottom: 24px;
+  text-align: left;
+  padding-left: 8px;
+  user-select: none;
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* dashboard body */
+.dashboard-content {
+  padding: 24px;
+}
+
+/* stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* calendar section */
+.calendar-section {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* month labels subheader */
+.month-labels-container {
+  display: grid;
+  grid-template-columns: 40px repeat(12, 1fr);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  padding-left: 8px;
+  user-select: none;
+}
+
+.month-label {
+  text-align: center;
+  font-weight: 500;
+}
+
+/* calendar scroll container */
+.calendar-scroll-wrapper {
+  padding-right: 4px;
+}
+
+/* custom scrollbar */
+.calendar-scroll-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.calendar-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+.calendar-scroll-wrapper::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+/* grid headers */
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: 40px repeat(7, 1fr);
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 16px;
+  user-select: none;
+}
+
+.grid-header-cell {
+  text-align: center;
+}
+
+.grid-header-cell.week-num-lbl {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* grid body rows */
+.calendar-grid-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-week-row {
+  display: grid;
+  grid-template-columns: 40px repeat(7, 1fr);
+  align-items: center;
+  min-height: 40px;
+}
+
+/* week number styling */
+.week-number {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-align: center;
+  user-select: none;
+}
+
+/* date cell styling */
+.date-cell {
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.date-cell:hover {
+  transform: scale(1.15);
+  z-index: 10;
+}
+
+/* day number text */
+.day-num {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+/* empty days */
+.date-cell.empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+.date-cell.empty .day-num {
+  opacity: 0.15;
+}
+
+/* gradient backgrounds */
+.date-cell-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* active workout day */
+.date-cell.active-workout .day-num {
+  font-weight: 600;
+  /* dark active color */
+  color: var(--text-primary);
+}
+
+/* rest days styling */
+.date-cell.rest-day .date-cell-bg {
+  background: transparent;
+  border: none;
+}
+
+/* active days styling */
+.date-cell.active-workout .date-cell-bg {
+  background: radial-gradient(circle,
+      rgba(var(--accent-rgb), var(--intensity-opacity)) 0%,
+      rgba(var(--accent-rgb), calc(var(--intensity-opacity) * 0.1)) var(--intensity-radius),
+      rgba(var(--accent-rgb), 0) calc(var(--intensity-radius) + 10%));
+  /* optional glow */
+  box-shadow: 0 0 calc(6px * var(--intensity)) rgba(var(--accent-rgb), calc(var(--intensity) * 0.15));
+}
+
+/* calendar footer */
+.calendar-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--card-border);
+  user-select: none;
+}
+
+.legend-text {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-scale {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+      rgba(var(--accent-rgb), var(--color-opacity)) 0%,
+      rgba(var(--accent-rgb), 0) 70%);
+  border: 1px solid var(--rest-day-border);
+}
+
+/* glassmorphism tooltip */
+.sonoma-tooltip {
+  position: fixed;
+  z-index: 100;
+  background: var(--tooltip-bg);
+  backdrop-filter: blur(15px) saturate(140%);
+  -webkit-backdrop-filter: blur(15px) saturate(140%);
+  border: 1px solid var(--tooltip-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px var(--tooltip-shadow);
+  padding: 12px;
+  width: 220px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 12px;
+}
+
+.sonoma-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-header {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.tooltip-body-label {
+  color: var(--text-secondary);
+}
+
+.tooltip-intensity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tooltip-score {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tooltip-divider {
+  height: 1px;
+  background: var(--tooltip-border);
+  margin: 8px 0;
+}
+
+.tooltip-exercises {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltip-exercises li {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.exercise-name {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 130px;
+}
+
+.exercise-val {
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .month-labels-container,
+  .calendar-grid-header,
+  .calendar-week-row {
+    grid-template-columns: 30px repeat(7, 1fr);
+  }
+}

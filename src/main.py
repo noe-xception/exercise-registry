@@ -2,14 +2,19 @@ import datetime
 import backup
 import data_layer
 import calculator
+import os
 
 # main application entry
 def main():
+    # get data folder
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_dir = os.path.join(base_dir, "data")
+    
     # perform auto backup
-    backup.perform_backup()
+    backup.perform_backup(data_dir)
     
     # get active exercises
-    exercises = data_layer.get_active_exercises()
+    exercises = data_layer.get_active_exercises(data_dir)
     
     # check if empty
     if not exercises:
@@ -17,7 +22,7 @@ def main():
         return
         
     # get current facts
-    facts = data_layer.get_fct_workouts()
+    facts = data_layer.get_fct_workouts(data_dir)
     
     # get current date
     now = datetime.datetime.now()
@@ -70,10 +75,10 @@ def main():
         new_rows.append(row)
         
     # save facts idempotently
-    data_layer.save_workouts(new_rows, today_str)
+    data_layer.save_workouts(new_rows, today_str, data_dir)
     
     # reload facts
-    all_facts = data_layer.get_fct_workouts()
+    all_facts = data_layer.get_fct_workouts(data_dir)
     
     # calculate streak counter
     streak = calculator.calculate_streak(all_facts, today_str)
@@ -82,6 +87,6 @@ def main():
     print("\nworkout saved successfully.")
     print(f"daily score: {score:.2f}%")
     print(f"current streak: {streak} days")
-    
+
 if __name__ == "__main__":
     main()
