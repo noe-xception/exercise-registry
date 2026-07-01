@@ -26,13 +26,27 @@ def main():
     
     # get current date
     now = datetime.datetime.now()
-    today_str = now.strftime("%Y-%m-%d")
+    default_date = now.strftime("%Y-%m-%d")
+    
+    # ask user for workout date
+    while True:
+        date_input = input(f"\nworkout date [{default_date}]: ").strip()
+        if not date_input:
+            today_str = default_date
+            break
+        else:
+            try:
+                datetime.datetime.strptime(date_input, "%Y-%m-%d")
+                today_str = date_input
+                break
+            except ValueError:
+                print("  invalid format. please use YYYY-MM-DD (e.g. 2026-06-20)")
     
     # store user inputs
     inputs = {}
     maxes = {}
     
-    print("enter reps for today:")
+    print(f"\nenter reps for {today_str}:")
     
     # iterate active exercises
     for ex in exercises:
@@ -60,6 +74,13 @@ def main():
             
         inputs[sk] = val
         
+    # prompt for workout duration
+    duration_str = input("\ntotal workout time (minutes): ")
+    if not duration_str.strip():
+        duration = 0
+    else:
+        duration = int(duration_str)
+        
     # calculate daily efficiency
     score = calculator.calculate_efficiency(inputs, maxes, exercises)
     
@@ -70,7 +91,8 @@ def main():
             "workout_dt": today_str,
             "exercise_sk": sk,
             "reps_cnt": str(reps),
-            "daily_score_pct": f"{score:.2f}"
+            "daily_score_pct": f"{score:.2f}",
+            "duration_mins": str(duration)
         }
         new_rows.append(row)
         

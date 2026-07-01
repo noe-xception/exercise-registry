@@ -1,4 +1,4 @@
 exercise_sk,exercise_nm,weight_num,sets_cnt,unit_nm,valid_from_dttm,valid_to_dttm,active_flg
 1,push-ups,0.33,3,repeats,2026-06-12 00:00:00,2999-12-31 23:59:59,1
 2,squats,0.33,3,repeats,2026-06-12 00:00:00,2999-12-31 23:59:59,1
-3,press,0.34,3,seconds,2026-06-12 00:00:00,2999-12-31 23:59:59,1
+3,press,0.34,3,repeats,2026-06-12 00:00:00,2999-12-31 23:59:59,1

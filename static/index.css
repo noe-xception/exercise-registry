@@ -394,12 +394,10 @@ body {
 
 /* active days styling */
 .date-cell.active-workout .date-cell-bg {
-  background: radial-gradient(circle,
+  background: radial-gradient(closest-side,
       rgba(var(--accent-rgb), var(--intensity-opacity)) 0%,
       rgba(var(--accent-rgb), calc(var(--intensity-opacity) * 0.1)) var(--intensity-radius),
-      rgba(var(--accent-rgb), 0) calc(var(--intensity-radius) + 10%));
-  /* optional glow */
-  box-shadow: 0 0 calc(6px * var(--intensity)) rgba(var(--accent-rgb), calc(var(--intensity) * 0.15));
+      rgba(var(--accent-rgb), 0) calc(var(--intensity-radius) + 25%));
 }
 
 /* calendar footer */

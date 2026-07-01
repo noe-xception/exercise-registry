@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tooltip = document.getElementById('tooltip');
   const tooltipDate = document.getElementById('tooltip-date');
   const tooltipScore = document.getElementById('tooltip-score');
+  const tooltipDuration = document.getElementById('tooltip-duration');
   const tooltipExercises = document.getElementById('tooltip-exercises');
 
   // fetch server data
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => {
       console.error('Error fetching workout data:', error);
       // fallback empty calendar
-      renderStats({ streak: 0, total_workouts: 0, avg_intensity: 0 });
+      renderStats({ streak: 0, total_workouts: 0, avg_intensity: 0, total_duration: 0 });
       renderCalendar({});
     });
 
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('metric-streak').textContent = `${stats.streak} day${stats.streak === 1 ? '' : 's'}`;
     document.getElementById('metric-total').textContent = stats.total_workouts;
     document.getElementById('metric-average').textContent = `${Math.round(stats.avg_intensity)}%`;
+    document.getElementById('metric-duration').textContent = `${stats.total_duration || 0} min`;
   }
 
   // render calendar
@@ -156,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.classList.add('rest-day');
 
             // tooltip events for rest day
-            const restData = { daily_score: 0, exercises: [] };
+            const restData = { daily_score: 0, duration_mins: 0, exercises: [] };
             cell.addEventListener('mouseenter', (e) => showTooltip(e, dateStr, restData));
             cell.addEventListener('mouseleave', hideTooltip);
           }
@@ -187,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tooltipDate.textContent = formattedDate;
     tooltipScore.textContent = `${data.daily_score.toFixed(1)}%`;
+    tooltipDuration.textContent = `${data.duration_mins || 0} min`;
 
     // empty list
     tooltipExercises.innerHTML = '';
