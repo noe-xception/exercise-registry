@@ -87,6 +87,8 @@ def main():
     # prepare new facts
     new_rows = []
     for sk, reps in inputs.items():
+        if reps == 0:
+            continue
         row = {
             "workout_dt": today_str,
             "exercise_sk": sk,
@@ -95,6 +97,10 @@ def main():
             "duration_mins": str(duration)
         }
         new_rows.append(row)
+        
+    if not new_rows:
+        print("\nno exercises completed. skipping workout save.")
+        return
         
     # save facts idempotently
     data_layer.save_workouts(new_rows, today_str, data_dir)
