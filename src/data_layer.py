@@ -65,12 +65,10 @@ def save_workouts(new_rows, today_str=None, directory="."):
     # append new rows
     all_facts.extend(new_rows)
     
-    # check if empty
-    if not all_facts:
-        return
-        
-    # get column names
-    fieldnames = list(all_facts[0].keys())
+    # default fieldnames
+    fieldnames = ["workout_dt", "exercise_sk", "reps_cnt", "daily_score_pct", "duration_mins"]
+    if all_facts:
+        fieldnames = list(all_facts[0].keys())
     
     # open write mode
     with open(path, mode="w", encoding="utf-8", newline="") as f:
@@ -81,3 +79,4 @@ def save_workouts(new_rows, today_str=None, directory="."):
         
         # write all rows
         writer.writerows(all_facts)
+

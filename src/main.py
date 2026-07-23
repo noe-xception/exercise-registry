@@ -99,7 +99,8 @@ def main():
         new_rows.append(row)
         
     if not new_rows:
-        print("\nno exercises completed. skipping workout save.")
+        data_layer.save_workouts([], today_str, data_dir)
+        print(f"\nno exercises completed. workout statistics for {today_str} wiped.")
         return
         
     # save facts idempotently
