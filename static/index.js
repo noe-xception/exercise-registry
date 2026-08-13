@@ -31,9 +31,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const calendarGrid = document.getElementById('calendar-grid');
   const tooltip = document.getElementById('tooltip');
   const tooltipDate = document.getElementById('tooltip-date');
-  const tooltipScore = document.getElementById('tooltip-score');
+  const tooltipScoreBadge = document.getElementById('tooltip-score-badge');
   const tooltipDuration = document.getElementById('tooltip-duration');
+  const tooltipProgressFill = document.getElementById('tooltip-progress-fill');
   const tooltipExercises = document.getElementById('tooltip-exercises');
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  // Initialize theme
+  initTheme();
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('app-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        let newTheme = 'light';
+
+        if (!currentTheme) {
+          const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          newTheme = isSystemDark ? 'light' : 'dark';
+        } else if (currentTheme === 'dark') {
+          newTheme = 'light';
+        } else {
+          newTheme = 'dark';
+        }
+
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('app-theme', newTheme);
+      });
+    }
+  }
 
   // fetch server data
   fetch('/api/data')
@@ -61,9 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCalendar(workouts) {
     calendarGrid.innerHTML = '';
 
-    // 3 months rolling
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayStr = formatDateString(today);
 
     // find current monday
     const currentDay = today.getDay(); // days of week
@@ -71,24 +102,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentMonday = new Date(today);
     currentMonday.setDate(today.getDate() - daysToMonday);
 
-    // start date
-    const startDate = new Date(currentMonday);
+    // start date (13 weeks back)
+    let startDate = new Date(currentMonday);
     startDate.setDate(startDate.getDate() - 13 * 7);
 
-    // end date
-    const endDate = new Date(currentMonday);
+    // end date (3 weeks ahead)
+    let endDate = new Date(currentMonday);
     endDate.setDate(endDate.getDate() + 3 * 7);
+
+    // find most recent filled date
+    const filledDates = Object.keys(workouts || {}).filter(d => {
+      const w = workouts[d];
+      return w && (w.exercises ? w.exercises.length > 0 : true);
+    });
+    filledDates.sort();
+    const mostRecentDateStr = filledDates.length > 0 ? filledDates[filledDates.length - 1] : null;
+
+    if (mostRecentDateStr) {
+      const mostRecentDate = parseDateString(mostRecentDateStr);
+      const mrDay = mostRecentDate.getDay();
+      const mrDaysToMonday = mrDay === 0 ? 6 : mrDay - 1;
+      const mrMonday = new Date(mostRecentDate);
+      mrMonday.setDate(mostRecentDate.getDate() - mrDaysToMonday);
+
+      if (mrMonday < startDate) {
+        startDate = new Date(mrMonday);
+      }
+      if (mostRecentDate > endDate) {
+        const mrSunday = new Date(mrMonday);
+        mrSunday.setDate(mrMonday.getDate() + 6);
+        endDate = new Date(mrSunday);
+      }
+    }
 
     let currentIterDate = new Date(startDate);
     let previousMonthName = '';
+    let mostRecentCell = null;
 
     // loop through weeks
     while (currentIterDate <= endDate) {
       const weekISO = getISOWeek(currentIterDate);
       const weekYear = currentIterDate.getFullYear();
 
-      // new month separator
-      // check month
+      // check month change
       const monthLabel = currentIterDate.toLocaleString('default', { month: 'long' });
       const monthYearLabel = `${monthLabel} ${weekYear}`;
 
@@ -119,6 +175,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const cell = document.createElement('div');
         cell.className = 'date-cell';
 
+        // mark today
+        if (dateStr === todayStr) {
+          cell.classList.add('is-today');
+          cell.title = 'Today';
+        }
+
+        // mark most recent filled date
+        if (dateStr === mostRecentDateStr) {
+          mostRecentCell = cell;
+        }
+
         // day background layer
         const cellBg = document.createElement('div');
         cellBg.className = 'date-cell-bg';
@@ -136,19 +203,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // check workout data
           const dayData = workouts[dateStr];
-          if (dayData) {
+          if (dayData && dayData.exercises && dayData.exercises.length > 0) {
             cell.classList.add('active-workout');
-            const score = dayData.daily_score;
-            const intensity = score / 100;
+            const score = dayData.daily_score || 0;
+            const intensity = Math.min(1.0, score / 100);
 
-            // map intensity
-            const opacity = 0.15 + (intensity * 0.75); // Range [0.15, 0.90]
-            const radius = 22 + (intensity * 30);       // Range [22%, 52%]
+            // Tier classification for styling
+            if (score >= 85) {
+              cell.setAttribute('data-intensity-tier', 'peak');
+            } else if (score >= 60) {
+              cell.setAttribute('data-intensity-tier', 'high');
+            } else if (score >= 30) {
+              cell.setAttribute('data-intensity-tier', 'med');
+            } else {
+              cell.setAttribute('data-intensity-tier', 'low');
+            }
 
-            // set css properties
-            cell.style.setProperty('--intensity', intensity);
-            cell.style.setProperty('--intensity-opacity', opacity);
-            cell.style.setProperty('--intensity-radius', `${radius}%`);
+            // smooth opacity mapping
+            const opacity = 0.25 + (intensity * 0.65);
+            cell.style.setProperty('--intensity-opacity', opacity.toFixed(2));
 
             // tooltip events
             cell.addEventListener('mouseenter', (e) => showTooltip(e, dateStr, dayData));
@@ -172,6 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // advance 1 week
       currentIterDate.setDate(currentIterDate.getDate() + 7);
     }
+
+    // scroll to most recent filled date
+    if (mostRecentCell) {
+      setTimeout(() => {
+        mostRecentCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
   }
 
   // tooltip rendering
@@ -181,25 +261,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // format date string
     const formattedDate = dateObj.toLocaleDateString('default', {
-      weekday: 'long',
+      weekday: 'short',
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
 
     tooltipDate.textContent = formattedDate;
-    tooltipScore.textContent = `${data.daily_score.toFixed(1)}%`;
+    const scoreVal = data.daily_score || 0;
+    tooltipScoreBadge.textContent = `${scoreVal.toFixed(0)}%`;
     tooltipDuration.textContent = `${data.duration_mins || 0} min`;
+    tooltipProgressFill.style.width = `${Math.min(100, Math.max(0, scoreVal))}%`;
 
     // empty list
     tooltipExercises.innerHTML = '';
 
-    if (data.exercises.length === 0) {
+    if (!data.exercises || data.exercises.length === 0) {
       const li = document.createElement('li');
       li.style.justifyContent = 'center';
-      li.style.color = 'var(--text-secondary)';
+      li.style.color = 'var(--text-tertiary)';
       li.style.fontStyle = 'italic';
-      li.textContent = 'Rest Day (No workouts)';
+      li.style.padding = '4px 0';
+      li.textContent = 'Rest Day (No workouts recorded)';
       tooltipExercises.appendChild(li);
     } else {
       data.exercises.forEach(ex => {
@@ -208,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameSpan = document.createElement('span');
         nameSpan.className = 'exercise-name';
         nameSpan.textContent = ex.name;
-        nameSpan.title = ex.name; // browser tooltip
+        nameSpan.title = ex.name;
 
         const valSpan = document.createElement('span');
         valSpan.className = 'exercise-val';
@@ -220,18 +303,50 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // position tooltip
-    const rect = cell.getBoundingClientRect();
-
-    // show tooltip
+    // show tooltip to calculate bounds
     tooltip.classList.add('visible');
+    tooltip.setAttribute('aria-hidden', 'false');
 
-    const tooltipWidth = tooltip.offsetWidth;
-    const tooltipHeight = tooltip.offsetHeight;
+    // position tooltip with boundary clamping
+    const rect = cell.getBoundingClientRect();
+    const tooltipWidth = tooltip.offsetWidth || 240;
+    const tooltipHeight = tooltip.offsetHeight || 140;
 
-    // center tooltip
-    const left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-    const top = rect.top - tooltipHeight - 10;
+    let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+    // clamp horizontally
+    left = Math.max(12, Math.min(window.innerWidth - tooltipWidth - 12, left));
+
+    let top = rect.top - tooltipHeight - 10;
+    const arrow = tooltip.querySelector('.tooltip-arrow');
+
+    if (top < 10) {
+      // Place below if not enough room on top
+      top = rect.bottom + 10;
+      if (arrow) {
+        arrow.style.bottom = 'auto';
+        arrow.style.top = '-6px';
+        arrow.style.borderRight = 'none';
+        arrow.style.borderBottom = 'none';
+        arrow.style.borderLeft = '1px solid var(--tooltip-border)';
+        arrow.style.borderTop = '1px solid var(--tooltip-border)';
+      }
+    } else {
+      if (arrow) {
+        arrow.style.top = 'auto';
+        arrow.style.bottom = '-6px';
+        arrow.style.borderLeft = 'none';
+        arrow.style.borderTop = 'none';
+        arrow.style.borderRight = '1px solid var(--tooltip-border)';
+        arrow.style.borderBottom = '1px solid var(--tooltip-border)';
+      }
+    }
+
+    // Align arrow with cell center
+    if (arrow) {
+      const cellCenterX = rect.left + rect.width / 2;
+      const arrowLeft = cellCenterX - left - 5;
+      arrow.style.left = `${Math.max(12, Math.min(tooltipWidth - 22, arrowLeft))}px`;
+    }
 
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
@@ -239,5 +354,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function hideTooltip() {
     tooltip.classList.remove('visible');
+    tooltip.setAttribute('aria-hidden', 'true');
   }
+
+  // Dismiss tooltip on scroll
+  window.addEventListener('scroll', hideTooltip, { passive: true });
 });
+
